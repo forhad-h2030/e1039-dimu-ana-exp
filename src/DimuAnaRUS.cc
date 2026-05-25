@@ -21,10 +21,7 @@ DimuAnaRUS::DimuAnaRUS(const std::string& name)
     m_tree_name("tree"),
     m_file_name("output.root"),
     m_evt(0),
-    m_srec(0),
-    saveDimuonOnly(false),
-    data_trig_mode(false),
-    mc_trig_mode(true)
+    m_srec(0)
 {
   ;
 }
