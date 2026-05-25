@@ -6,11 +6,13 @@
 class TFile;
 class TTree;
 class SQEvent;
-class SRecEvent;
+class SQDimuonVector;
+class SQTrackVector;
 
 class DimuAnaRUS: public SubsysReco {
-	SQEvent*   m_evt;
-	SRecEvent* m_srec;
+	SQEvent*        m_evt;
+	SQDimuonVector* m_sq_dim_vec;
+	SQTrackVector*  m_sq_trk_vec;
 
 	std::string m_file_name;
 	std::string m_tree_name;
