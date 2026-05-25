@@ -76,6 +76,8 @@ int DimuAnaRUS::InitRun(PHCompositeNode* startNode)
 	}
 	cout <<"Roadset " << m_rs.str(1) << endl;
 
+	m_tree->SetAutoSave(100000000); // flush to disk every ~100 MB
+
 	m_tree->Branch("eventID", &eventID, "eventID/I");
 	m_tree->Branch("runID", &runID, "runID/I");
 	m_tree->Branch("spillID", &spillID, "spillID/I");
