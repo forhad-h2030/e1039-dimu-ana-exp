@@ -1,13 +1,4 @@
 #!/usr/bin/env python3
-"""
-count_cuts.py  —  run on spinquestgpvm01 (no conda).
-  Loops over raw ktracker files, applies cuts one by one,
-  and prints the dimuon count after each step.
-
-Usage:
-    source /seaquest/users/mhossain/e1039-dimu-ana-exp/setup.sh
-    python3 /seaquest/users/mhossain/e1039-dimu-ana-exp/count_cuts.py
-"""
 import ROOT
 ROOT.gROOT.SetBatch(True)
 
