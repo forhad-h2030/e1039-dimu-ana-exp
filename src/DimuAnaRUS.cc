@@ -7,20 +7,10 @@
 #include <TH1D.h>
 #include <TCanvas.h>
 #include <interface_main/SQRun.h>
-#include <interface_main/SQHitVector.h>
 #include <interface_main/SQEvent.h>
-#include <interface_main/SQMCEvent.h>
-#include <interface_main/SQRun.h>
-#include <interface_main/SQTrackVector.h>
-#include <interface_main/SQDimuonVector.h>
-#include <interface_main/SQTrackVector_v1.h>
-#include <ktracker/FastTracklet.h>
 #include <ktracker/SRecEvent.h>
 #include <fun4all/Fun4AllReturnCodes.h>
-#include <phool/PHNodeIterator.h>
-#include <phool/PHIODataNode.h>
 #include <phool/getClass.h>
-#include <geom_svc/GeomSvc.h>
 #include "DimuAnaRUS.h"
 using namespace std;
 
@@ -31,10 +21,7 @@ DimuAnaRUS::DimuAnaRUS(const std::string& name)
     m_tree_name("tree"),
     m_file_name("output.root"),
     m_evt(0),
-    m_sp_map(0),
-    m_hit_vec(0),
-    m_sq_trk_vec(0),
-    m_sq_dim_vec(0),
+    m_srec(0),
     saveDimuonOnly(false),
     data_trig_mode(false),
     mc_trig_mode(true)
@@ -71,11 +58,10 @@ int DimuAnaRUS::InitRun(PHCompositeNode* startNode)
 		std::cout << "Tree " << m_tree->GetName() << " created successfully." << std::endl;
 	}
 
-	m_evt = findNode::getClass<SQEvent>(startNode, "SQEvent");
-	m_sq_dim_vec = findNode::getClass<SQDimuonVector>(startNode, "SQRecDimuonVector_PM");
-	m_sq_trk_vec = findNode::getClass<SQTrackVector >(startNode, "SQRecTrackVector");
+	m_evt  = findNode::getClass<SQEvent  >(startNode, "SQEvent");
+	m_srec = findNode::getClass<SRecEvent>(startNode, "SRecEvent");
 
-	if (!m_evt || !m_sq_dim_vec || !m_sq_trk_vec) return Fun4AllReturnCodes::ABORTEVENT;
+	if (!m_evt || !m_srec) return Fun4AllReturnCodes::ABORTEVENT;
 
 
 	SQRun* sq_run = findNode::getClass<SQRun>(startNode, "SQRun");
@@ -98,48 +84,6 @@ int DimuAnaRUS::InitRun(PHCompositeNode* startNode)
 	m_tree->Branch("rec_dimuon_roads", &rec_dimuon_roads);
 
 
-	//m_tree->Branch("rec_track_id",             &rec_track_id);
-	m_tree->Branch("rec_track_charge",         &rec_track_charge);
-	m_tree->Branch("rec_track_vx",             &rec_track_vx);
-	m_tree->Branch("rec_track_vy",             &rec_track_vy);
-	m_tree->Branch("rec_track_vz",             &rec_track_vz);
-	m_tree->Branch("rec_track_px",             &rec_track_px);
-	m_tree->Branch("rec_track_py",             &rec_track_py);
-	m_tree->Branch("rec_track_pz",             &rec_track_pz);
-	m_tree->Branch("rec_track_x_st1",          &rec_track_x_st1);
-	m_tree->Branch("rec_track_y_st1",          &rec_track_y_st1);
-	m_tree->Branch("rec_track_z_st1",          &rec_track_z_st1);
-	m_tree->Branch("rec_track_px_st1",         &rec_track_px_st1);
-	m_tree->Branch("rec_track_py_st1",         &rec_track_py_st1);
-	m_tree->Branch("rec_track_pz_st1",         &rec_track_pz_st1);
-	m_tree->Branch("rec_track_x_st3",          &rec_track_x_st3);
-	m_tree->Branch("rec_track_y_st3",          &rec_track_y_st3);
-	m_tree->Branch("rec_track_z_st3",          &rec_track_z_st3);
-	m_tree->Branch("rec_track_px_st3",         &rec_track_px_st3);
-	m_tree->Branch("rec_track_py_st3",         &rec_track_py_st3);
-	m_tree->Branch("rec_track_pz_st3",         &rec_track_pz_st3);
-	m_tree->Branch("rec_track_num_hits",       &rec_track_num_hits);
-	m_tree->Branch("rec_track_chisq",          &rec_track_chisq);
-	m_tree->Branch("rec_track_chisq_tgt",   &rec_track_chisq_tgt);
-	m_tree->Branch("rec_track_chisq_dump",     &rec_track_chisq_dump);
-	m_tree->Branch("rec_track_chisq_upstream", &rec_track_chisq_upstream);
-	m_tree->Branch("rec_track_x_tgt",          &rec_track_x_tgt);
-	m_tree->Branch("rec_track_y_tgt",          &rec_track_y_tgt);
-	m_tree->Branch("rec_track_z_tgt",          &rec_track_z_tgt);
-	m_tree->Branch("rec_track_px_tgt",         &rec_track_px_tgt);
-	m_tree->Branch("rec_track_py_tgt",         &rec_track_py_tgt);
-	m_tree->Branch("rec_track_pz_tgt",         &rec_track_pz_tgt);
-	m_tree->Branch("rec_track_x_dump",         &rec_track_x_dump);
-	m_tree->Branch("rec_track_y_dump",         &rec_track_y_dump);
-	m_tree->Branch("rec_track_z_dump",         &rec_track_z_dump);
-	m_tree->Branch("rec_track_px_dump",        &rec_track_px_dump);
-	m_tree->Branch("rec_track_py_dump",        &rec_track_py_dump);
-	m_tree->Branch("rec_track_pz_dump",        &rec_track_pz_dump);
-	//m_tree->Branch("rec_hit_ids",              &rec_hit_ids);
-	m_tree->Branch("rec_track_hit_x",              &rec_track_hit_x);
-	m_tree->Branch("rec_track_hit_y",              &rec_track_hit_y);
-
-
 	m_tree->Branch("rec_dimuon_x", &rec_dimuon_x);
 	m_tree->Branch("rec_dimuon_y", &rec_dimuon_y);
 	m_tree->Branch("rec_dimuon_z", &rec_dimuon_z);
@@ -159,14 +103,6 @@ int DimuAnaRUS::InitRun(PHCompositeNode* startNode)
 	m_tree->Branch("rec_dimuon_px_neg_tgt", &rec_dimuon_px_neg_tgt);
 	m_tree->Branch("rec_dimuon_py_neg_tgt", &rec_dimuon_py_neg_tgt);
 	m_tree->Branch("rec_dimuon_pz_neg_tgt", &rec_dimuon_pz_neg_tgt);
-
-	m_tree->Branch("rec_dimuon_px_pos_dump", &rec_dimuon_px_pos_dump);
-	m_tree->Branch("rec_dimuon_py_pos_dump", &rec_dimuon_py_pos_dump);
-	m_tree->Branch("rec_dimuon_pz_pos_dump", &rec_dimuon_pz_pos_dump);
-
-	m_tree->Branch("rec_dimuon_px_neg_dump", &rec_dimuon_px_neg_dump);
-	m_tree->Branch("rec_dimuon_py_neg_dump", &rec_dimuon_py_neg_dump);
-	m_tree->Branch("rec_dimuon_pz_neg_dump", &rec_dimuon_pz_neg_dump);
 
 	// Vertex position (x, y, z) for positive trk
 	m_tree->Branch("rec_dimuon_x_pos_vtx", &rec_dimuon_x_pos_vtx);
@@ -244,76 +180,14 @@ int DimuAnaRUS::process_event(PHCompositeNode* startNode)
     runID = m_evt->get_run_id();
     spillID = m_evt->get_spill_id();
 
-    const double muon_mass = 0.10566;
-
-
-        int index = -1;
-		ResetRecoBranches();
-		for (auto it = m_sq_trk_vec->begin(); it != m_sq_trk_vec->end(); ++it) {
-			index+=1;
-			SRecTrack* trk = dynamic_cast<SRecTrack*>(*it);
-
-            //cout << "track id: "<< trk->get_rec_track_id ()  <<" charge: " << trk->get_charge() << "index: "<<endl;
-
-			rec_track_id.push_back(index);  // where i_trk is the index in the reco track loop
-			// Basic track info
-			rec_track_charge.push_back(trk->get_charge());
-			rec_track_vx.push_back(trk->get_pos_vtx().X());
-			rec_track_vy.push_back(trk->get_pos_vtx().Y());
-			rec_track_vz.push_back(trk->get_pos_vtx().Z());
-			rec_track_px.push_back(trk->get_mom_vtx().Px());
-			rec_track_py.push_back(trk->get_mom_vtx().Py());
-			rec_track_pz.push_back(trk->get_mom_vtx().Pz());
-
-			// Station 1
-			rec_track_x_st1.push_back(trk->get_pos_st1().X());
-			rec_track_y_st1.push_back(trk->get_pos_st1().Y());
-			rec_track_z_st1.push_back(trk->get_pos_st1().Z());
-			rec_track_px_st1.push_back(trk->get_mom_st1().Px());
-			rec_track_py_st1.push_back(trk->get_mom_st1().Py());
-			rec_track_pz_st1.push_back(trk->get_mom_st1().Pz());
-
-			// Station 3
-			rec_track_x_st3.push_back(trk->get_pos_st3().X());
-			rec_track_y_st3.push_back(trk->get_pos_st3().Y());
-			rec_track_z_st3.push_back(trk->get_pos_st3().Z());
-			rec_track_px_st3.push_back(trk->get_mom_st3().Px());
-			rec_track_py_st3.push_back(trk->get_mom_st3().Py());
-			rec_track_pz_st3.push_back(trk->get_mom_st3().Pz());
-
-			// Chi-squared
-			rec_track_chisq.push_back(trk->get_chisq());
-			rec_track_chisq_tgt.push_back(trk->getChisqTarget());
-			rec_track_chisq_dump.push_back(trk->get_chisq_dump());
-			rec_track_chisq_upstream.push_back(trk->get_chisq_upstream());
-
-			// Number of hits
-			rec_track_num_hits.push_back(trk->get_num_hits());
-
-			// Target region
-			rec_track_x_tgt.push_back(trk->get_pos_target().X());
-			rec_track_y_tgt.push_back(trk->get_pos_target().Y());
-			rec_track_z_tgt.push_back(trk->get_pos_target().Z());
-			rec_track_px_tgt.push_back(trk->get_mom_target().Px());
-			rec_track_py_tgt.push_back(trk->get_mom_target().Py());
-			rec_track_pz_tgt.push_back(trk->get_mom_target().Pz());
-
-			// Dump region
-			rec_track_x_dump.push_back(trk->get_pos_dump().X());
-			rec_track_y_dump.push_back(trk->get_pos_dump().Y());
-			rec_track_z_dump.push_back(trk->get_pos_dump().Z());
-			rec_track_px_dump.push_back(trk->get_mom_dump().Px());
-			rec_track_py_dump.push_back(trk->get_mom_dump().Py());
-			rec_track_pz_dump.push_back(trk->get_mom_dump().Pz());
-		}
-
     ResetRecoDimuBranches();
-    for (auto it = m_sq_dim_vec->begin(); it != m_sq_dim_vec->end(); it++) {
-        SRecDimuon& sdim = dynamic_cast<SRecDimuon&>(**it);
+    int n_dim = m_srec->getNDimuons();
+    for (int i_dim = 0; i_dim < n_dim; i_dim++) {
+        SRecDimuon sdim = m_srec->getDimuon(i_dim);
         int trk_id_pos = sdim.get_track_id_pos();
         int trk_id_neg = sdim.get_track_id_neg();
-        SRecTrack& trk_pos = dynamic_cast<SRecTrack&>(*(m_sq_trk_vec->at(trk_id_pos))); 
-        SRecTrack& trk_neg = dynamic_cast<SRecTrack&>(*(m_sq_trk_vec->at(trk_id_neg))); 
+        SRecTrack trk_pos = m_srec->getTrack(trk_id_pos);
+        SRecTrack trk_neg = m_srec->getTrack(trk_id_neg);
 
 	    int road_pos = trk_pos.getTriggerRoad();
     	int road_neg = trk_neg.getTriggerRoad();
@@ -330,11 +204,17 @@ int DimuAnaRUS::process_event(PHCompositeNode* startNode)
       	if (top_bot || bot_top) rec_dimuon_roads.push_back(1);
 		else rec_dimuon_roads.push_back(0);
 
-        //if (trk_pos.getChisqTarget() < 0 || trk_pos.get_chisq_dump() < 0 || trk_pos.get_chsiq_upstream() < 0 ||
-        //    trk_pos.getChisqTarget() - trk_pos.get_chisq_dump() > 0 || trk_pos.getChisqTarget() - trk_pos.get_chsiq_upstream() > 0) continue;
-
-       // if (trk_neg.getChisqTarget() < 0 || trk_neg.get_chisq_dump() < 0 || trk_neg.get_chsiq_upstream() < 0 ||
-       ///         trk_neg.getChisqTarget() - trk_neg.get_chisq_dump() > 0 || trk_neg.getChisqTarget() - trk_neg.get_chsiq_upstream() > 0) continue;
+        // Chi2 origin cuts (Cut #1, applied downstream):
+        // target must be best vertex for each track:
+        //   chi2_tgt > 0
+        //   chi2_dump     - chi2_tgt > 0  (dump   is worse than target)
+        //   chi2_upstream - chi2_tgt > 0  (upstream is worse than target)
+        //if (trk_pos.getChisqTarget() <= 0 ||
+        //    trk_pos.get_chisq_dump()     - trk_pos.getChisqTarget() <= 0 ||
+        //    trk_pos.get_chisq_upstream() - trk_pos.getChisqTarget() <= 0) continue;
+        //if (trk_neg.getChisqTarget() <= 0 ||
+        //    trk_neg.get_chisq_dump()     - trk_neg.getChisqTarget() <= 0 ||
+        //    trk_neg.get_chisq_upstream() - trk_neg.getChisqTarget() <= 0) continue;
 
         rec_dimuon_id.push_back(sdim.get_dimuon_id());
         rec_dimuon_true_id.push_back(sdim.get_rec_dimuon_id());
@@ -357,17 +237,7 @@ int DimuAnaRUS::process_event(PHCompositeNode* startNode)
         rec_dimuon_px_neg_tgt.push_back(sdim.p_neg_target.Px());
         rec_dimuon_py_neg_tgt.push_back(sdim.p_neg_target.Py());
         rec_dimuon_pz_neg_tgt.push_back(sdim.p_neg_target.Pz());
-        //cout << "mass neg: " << sdim.p_neg_target.M() << endl;
-        // ===== Dump hypothesis =====
-        sdim.calcVariables(2); // 2 = dump
-        rec_dimuon_px_pos_dump.push_back(sdim.p_pos_dump.Px());
-        rec_dimuon_py_pos_dump.push_back(sdim.p_pos_dump.Py());
-        rec_dimuon_pz_pos_dump.push_back(sdim.p_pos_dump.Pz());
-        rec_dimuon_px_neg_dump.push_back(sdim.p_neg_dump.Px());
-        rec_dimuon_py_neg_dump.push_back(sdim.p_neg_dump.Py());
-        rec_dimuon_pz_neg_dump.push_back(sdim.p_neg_dump.Pz());
-
-		//--------
+        //--------
 		//vtx
         rec_dimuon_px_pos_vtx.push_back(trk_pos.get_mom_vtx().Px());
         rec_dimuon_py_pos_vtx.push_back(trk_pos.get_mom_vtx().Py());
@@ -442,10 +312,7 @@ void DimuAnaRUS::ResetRecoDimuBranches() {
     rec_dimuon_px_neg.clear(); rec_dimuon_py_neg.clear(); rec_dimuon_pz_neg.clear();
     rec_dimuon_px_pos_tgt.clear(); rec_dimuon_py_pos_tgt.clear(); rec_dimuon_pz_pos_tgt.clear();
     rec_dimuon_px_neg_tgt.clear(); rec_dimuon_py_neg_tgt.clear(); rec_dimuon_pz_neg_tgt.clear();
-    rec_dimuon_px_pos_dump.clear(); rec_dimuon_py_pos_dump.clear(); rec_dimuon_pz_pos_dump.clear();
-    rec_dimuon_px_neg_dump.clear(); rec_dimuon_py_neg_dump.clear(); rec_dimuon_pz_neg_dump.clear();
     rec_dimuon_x_pos_st1.clear();  rec_dimuon_y_pos_st1.clear(); rec_dimuon_z_pos_st1.clear();
-    rec_dimuon_px_neg.clear(); rec_dimuon_py_neg.clear(); rec_dimuon_pz_neg.clear();
     rec_dimuon_roads.clear();
     rec_dimuon_x_pos_vtx.clear();
     rec_dimuon_y_pos_vtx.clear();
@@ -486,25 +353,3 @@ void DimuAnaRUS::ResetRecoDimuBranches() {
 }
 
 
-void DimuAnaRUS::ResetRecoBranches() {
-    rec_track_id.clear();
-    rec_track_charge.clear();
-    rec_track_vx.clear(); rec_track_vy.clear(); rec_track_vz.clear();
-    rec_track_px.clear(); rec_track_py.clear(); rec_track_pz.clear();
-    rec_track_x_st1.clear(); rec_track_y_st1.clear(); rec_track_z_st1.clear();
-    rec_track_px_st1.clear(); rec_track_py_st1.clear(); rec_track_pz_st1.clear();
-    rec_track_x_st3.clear(); rec_track_y_st3.clear(); rec_track_z_st3.clear();
-    rec_track_px_st3.clear(); rec_track_py_st3.clear(); rec_track_pz_st3.clear();
-    rec_track_chisq.clear();
-    rec_track_chisq_tgt.clear();
-    rec_track_chisq_dump.clear();
-    rec_track_chisq_upstream.clear();
-    rec_track_num_hits.clear();
-    rec_track_x_tgt.clear(); rec_track_y_tgt.clear(); rec_track_z_tgt.clear();
-    rec_track_px_tgt.clear(); rec_track_py_tgt.clear(); rec_track_pz_tgt.clear();
-    rec_track_x_dump.clear(); rec_track_y_dump.clear(); rec_track_z_dump.clear();
-    rec_track_px_dump.clear(); rec_track_py_dump.clear(); rec_track_pz_dump.clear();
-    //rec_hit_ids.clear();
-    rec_track_hit_x.clear();
-    rec_track_hit_y.clear();
-}

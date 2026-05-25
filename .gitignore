@@ -3,6 +3,7 @@
 *.tmp
 *.swp
 build/
+delete/
 inst/
 Convert/scratch
 Convert/data

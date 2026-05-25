@@ -2,32 +2,15 @@
 #define _DIMU_ANA_RUS_H_
 #include <fun4all/SubsysReco.h>
 #include <UtilAna/TrigRoadset.h>
-#include <unordered_map>
-
 
 class TFile;
 class TTree;
-class SQRun;
-class SQSpillMap;
 class SQEvent;
-class SQHitVector;
-class SQTrackVector;
-class SQDimuonVector;
-class SQMCEvent;
-class TrackletVector;
-class SQHit;
+class SRecEvent;
 
 class DimuAnaRUS: public SubsysReco {
-	SQEvent* m_evt;
-	SQMCEvent* m_evt_true;
-	SQSpillMap* m_sp_map;
-	SQHitVector* m_hit_vec;
-	SQTrackVector * m_vec_trk;
-	SQTrackVector*  m_sq_trk_vec;
-    TrackletVector* trackletVec;
-	SQDimuonVector* m_sq_dim_vec;
-	SQDimuonVector* m_true_vec_dim;
-	SQRun* sq_run;
+	SQEvent*   m_evt;
+	SRecEvent* m_srec;
 
 	std::string m_file_name;
 	std::string m_tree_name;
@@ -87,7 +70,6 @@ class DimuAnaRUS: public SubsysReco {
 	void SetFileName(const std::string& name) { m_file_name = name; }
 	void ResetHitBranches();
 	void ResetTrueBranches();
-	void ResetRecoBranches();
 	void ResetRecoDimuBranches();
 
 	private:
@@ -136,8 +118,6 @@ class DimuAnaRUS: public SubsysReco {
     rec_dimuon_px_neg, rec_dimuon_py_neg, rec_dimuon_pz_neg,
     rec_dimuon_px_pos_tgt, rec_dimuon_py_pos_tgt, rec_dimuon_pz_pos_tgt,
     rec_dimuon_px_neg_tgt, rec_dimuon_py_neg_tgt, rec_dimuon_pz_neg_tgt,
-    rec_dimuon_px_pos_dump, rec_dimuon_py_pos_dump, rec_dimuon_pz_pos_dump,
-    rec_dimuon_px_neg_dump, rec_dimuon_py_neg_dump, rec_dimuon_pz_neg_dump,
     rec_dimuon_x_pos_st1, rec_dimuon_y_pos_st1, rec_dimuon_z_pos_st1,
     rec_dimuon_x_neg_st1, rec_dimuon_y_neg_st1, rec_dimuon_z_neg_st1,
     rec_dimuon_x_pos_st3, rec_dimuon_y_pos_st3, rec_dimuon_z_pos_st3,
@@ -152,26 +132,6 @@ class DimuAnaRUS: public SubsysReco {
     rec_dimuon_px_neg_vtx, rec_dimuon_py_neg_vtx, rec_dimuon_pz_neg_vtx;
 
 
-	std::vector<int>
-    rec_track_id,
-    rec_track_charge,
-    rec_track_num_hits;
-	std::vector<std::vector<int>> rec_hit_ids;
-	std::vector<std::vector<double>> rec_track_hit_x;
-	std::vector<std::vector<double>> rec_track_hit_y;
-
-	std::vector<double>
-    rec_track_vx, rec_track_vy, rec_track_vz,
-    rec_track_px, rec_track_py, rec_track_pz,
-    rec_track_x_st1, rec_track_y_st1, rec_track_z_st1,
-    rec_track_px_st1, rec_track_py_st1, rec_track_pz_st1,
-    rec_track_x_st3, rec_track_y_st3, rec_track_z_st3,
-    rec_track_px_st3, rec_track_py_st3, rec_track_pz_st3,
-    rec_track_chisq, rec_track_chisq_tgt, rec_track_chisq_dump, rec_track_chisq_upstream,
-    rec_track_x_tgt, rec_track_y_tgt, rec_track_z_tgt,
-    rec_track_px_tgt, rec_track_py_tgt, rec_track_pz_tgt,
-    rec_track_x_dump, rec_track_y_dump, rec_track_z_dump,
-    rec_track_px_dump, rec_track_py_dump, rec_track_pz_dump;
 };
 
 #endif // _DimuAnaRUS.h_
