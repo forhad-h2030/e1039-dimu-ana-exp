@@ -1,0 +1,8 @@
+*.root
+*.log
+*.tmp
+*.swp
+build/
+inst/
+Convert/scratch
+Convert/data
