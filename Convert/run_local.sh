@@ -8,7 +8,7 @@
 #     test_output.root \
 #     0
 
-set -euo pipefail
+set -eo pipefail
 
 DIR_TOP="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "${DIR_TOP}/setup.sh"
