@@ -192,6 +192,29 @@ int DimuAnaRUS::process_event(PHCompositeNode* startNode)
         SRecTrack* trk_neg = dynamic_cast<SRecTrack*>(m_sq_trk_vec->at(trk_id_neg));
         if (!trk_pos || !trk_neg) continue;
 
+        // --- Cut: z vertex > -690 cm (dimuon vertex + both track vertices) ---
+        if (sdim->get_pos().Z()           < -690.) continue;
+        if (trk_pos->get_pos_vtx().Z()    < -690.) continue;
+        if (trk_neg->get_pos_vtx().Z()    < -690.) continue;
+
+        // --- Cut: |y_st1| > 3 cm (both tracks) ---
+        if (fabs(trk_pos->get_pos_st1().Y()) < 3.) continue;
+        if (fabs(trk_neg->get_pos_st1().Y()) < 3.) continue;
+
+        // --- Cut: chi2 — target must be the best vertex hypothesis ---
+        if (trk_pos->getChisqTarget() <= 0 ||
+            trk_pos->get_chisq_dump()     - trk_pos->getChisqTarget() <= 0 ||
+            trk_pos->get_chisq_upstream() - trk_pos->getChisqTarget() <= 0) continue;
+        if (trk_neg->getChisqTarget() <= 0 ||
+            trk_neg->get_chisq_dump()     - trk_neg->getChisqTarget() <= 0 ||
+            trk_neg->get_chisq_upstream() - trk_neg->getChisqTarget() <= 0) continue;
+
+        // --- Target hypothesis & mass > 0 ---
+        sdim->calcVariables(1); // 1 = target
+        TLorentzVector mom_dimuon = sdim->p_pos_target + sdim->p_neg_target;
+        if (mom_dimuon.M() <= 0.) continue;
+
+        // --- Road check (stored as flag, not a cut) ---
         int road_pos = trk_pos->getTriggerRoad();
         int road_neg = trk_neg->getTriggerRoad();
         bool pos_top = m_rs.PosTop()->FindRoad(road_pos);
@@ -200,21 +223,8 @@ int DimuAnaRUS::process_event(PHCompositeNode* startNode)
         bool neg_bot = m_rs.NegBot()->FindRoad(road_neg);
         bool top_bot = pos_top && neg_bot;
         bool bot_top = pos_bot && neg_top;
-
         if (top_bot || bot_top) rec_dimuon_roads.push_back(1);
         else                    rec_dimuon_roads.push_back(0);
-
-        // Chi2 origin cuts (Cut #1, applied downstream):
-        // target must be best vertex for each track:
-        //   chi2_tgt > 0
-        //   chi2_dump     - chi2_tgt > 0  (dump   is worse than target)
-        //   chi2_upstream - chi2_tgt > 0  (upstream is worse than target)
-        //if (trk_pos->getChisqTarget() <= 0 ||
-        //    trk_pos->get_chisq_dump()     - trk_pos->getChisqTarget() <= 0 ||
-        //    trk_pos->get_chisq_upstream() - trk_pos->getChisqTarget() <= 0) continue;
-        //if (trk_neg->getChisqTarget() <= 0 ||
-        //    trk_neg->get_chisq_dump()     - trk_neg->getChisqTarget() <= 0 ||
-        //    trk_neg->get_chisq_upstream() - trk_neg->getChisqTarget() <= 0) continue;
 
         rec_dimuon_id.push_back(sdim->get_dimuon_id());
         rec_dimuon_true_id.push_back(sdim->get_rec_dimuon_id());
@@ -229,8 +239,7 @@ int DimuAnaRUS::process_event(PHCompositeNode* startNode)
         rec_dimuon_x.push_back(sdim->get_pos().X());
         rec_dimuon_y.push_back(sdim->get_pos().Y());
         rec_dimuon_z.push_back(sdim->get_pos().Z());
-        // ===== Target hypothesis =====
-        sdim->calcVariables(1); // 1 = target
+        // ===== Target hypothesis (already called above) =====
         rec_dimuon_px_pos_tgt.push_back(sdim->p_pos_target.Px());
         rec_dimuon_py_pos_tgt.push_back(sdim->p_pos_target.Py());
         rec_dimuon_pz_pos_tgt.push_back(sdim->p_pos_target.Pz());
