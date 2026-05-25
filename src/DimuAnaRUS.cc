@@ -108,6 +108,14 @@ int DimuAnaRUS::InitRun(PHCompositeNode* startNode)
 	m_tree->Branch("rec_dimuon_py_neg_tgt", &rec_dimuon_py_neg_tgt);
 	m_tree->Branch("rec_dimuon_pz_neg_tgt", &rec_dimuon_pz_neg_tgt);
 
+	// chi2 vertex-hypothesis values
+	m_tree->Branch("rec_dimuon_chisq_target_pos",   &rec_dimuon_chisq_target_pos);
+	m_tree->Branch("rec_dimuon_chisq_dump_pos",     &rec_dimuon_chisq_dump_pos);
+	m_tree->Branch("rec_dimuon_chisq_upstream_pos", &rec_dimuon_chisq_upstream_pos);
+	m_tree->Branch("rec_dimuon_chisq_target_neg",   &rec_dimuon_chisq_target_neg);
+	m_tree->Branch("rec_dimuon_chisq_dump_neg",     &rec_dimuon_chisq_dump_neg);
+	m_tree->Branch("rec_dimuon_chisq_upstream_neg", &rec_dimuon_chisq_upstream_neg);
+
 	// Vertex position (x, y, z) for positive trk
 	m_tree->Branch("rec_dimuon_x_pos_vtx", &rec_dimuon_x_pos_vtx);
 	m_tree->Branch("rec_dimuon_y_pos_vtx", &rec_dimuon_y_pos_vtx);
@@ -181,8 +189,10 @@ int DimuAnaRUS::process_event(PHCompositeNode* startNode)
     }
 
     eventID = m_evt->get_event_id();
-    runID = m_evt->get_run_id();
+    runID   = m_evt->get_run_id();
     spillID = m_evt->get_spill_id();
+
+    m_run_n_events[runID]++;  // count every MATRIX1-triggered event
 
     ResetRecoDimuBranches();
     for (size_t i_dim = 0; i_dim < m_sq_dim_vec->size(); i_dim++) {
@@ -202,18 +212,34 @@ int DimuAnaRUS::process_event(PHCompositeNode* startNode)
         if (fabs(trk_pos->get_pos_st1().Y()) < 3.) continue;
         if (fabs(trk_neg->get_pos_st1().Y()) < 3.) continue;
 
-        // --- Cut: chi2 — target must be the best vertex hypothesis ---
-        if (trk_pos->getChisqTarget() <= 0 ||
-            trk_pos->get_chisq_dump()     - trk_pos->getChisqTarget() <= 0 ||
-            trk_pos->get_chisq_upstream() - trk_pos->getChisqTarget() <= 0) continue;
-        if (trk_neg->getChisqTarget() <= 0 ||
-            trk_neg->get_chisq_dump()     - trk_neg->getChisqTarget() <= 0 ||
-            trk_neg->get_chisq_upstream() - trk_neg->getChisqTarget() <= 0) continue;
+        // --- Cut: chi2 — all hypotheses valid, target must be the best ---
+        double chisq_target_pos   = trk_pos->getChisqTarget();
+        double chisq_dump_pos     = trk_pos->getChisqDump();
+        double chisq_upstream_pos = trk_pos->getChisqUpstream();
+        double chisq_target_neg   = trk_neg->getChisqTarget();
+        double chisq_dump_neg     = trk_neg->getChisqDump();
+        double chisq_upstream_neg = trk_neg->getChisqUpstream();
+
+        bool pass_chisq_cut =
+            (chisq_target_pos   >= 0 &&
+             chisq_dump_pos     >= 0 &&
+             chisq_upstream_pos >= 0 &&
+             (chisq_target_pos - chisq_dump_pos)     <= 0 &&
+             (chisq_target_pos - chisq_upstream_pos) <= 0 &&
+             chisq_target_neg   >= 0 &&
+             chisq_dump_neg     >= 0 &&
+             chisq_upstream_neg >= 0 &&
+             (chisq_target_neg - chisq_dump_neg)     <= 0 &&
+             (chisq_target_neg - chisq_upstream_neg) <= 0);
+
+        if (!pass_chisq_cut) continue;
 
         // --- Target hypothesis & mass > 0 ---
         sdim->calcVariables(1); // 1 = target
         TLorentzVector mom_dimuon = sdim->p_pos_target + sdim->p_neg_target;
         if (mom_dimuon.M() <= 0.) continue;
+
+        m_run_n_dimuons[runID]++;  // this dimuon passed all cuts
 
         // --- Road check (stored as flag, not a cut) ---
         int road_pos = trk_pos->getTriggerRoad();
@@ -247,6 +273,13 @@ int DimuAnaRUS::process_event(PHCompositeNode* startNode)
         rec_dimuon_px_neg_tgt.push_back(sdim->p_neg_target.Px());
         rec_dimuon_py_neg_tgt.push_back(sdim->p_neg_target.Py());
         rec_dimuon_pz_neg_tgt.push_back(sdim->p_neg_target.Pz());
+        // chi2 values (already fetched above for the cut)
+        rec_dimuon_chisq_target_pos.push_back(chisq_target_pos);
+        rec_dimuon_chisq_dump_pos.push_back(chisq_dump_pos);
+        rec_dimuon_chisq_upstream_pos.push_back(chisq_upstream_pos);
+        rec_dimuon_chisq_target_neg.push_back(chisq_target_neg);
+        rec_dimuon_chisq_dump_neg.push_back(chisq_dump_neg);
+        rec_dimuon_chisq_upstream_neg.push_back(chisq_upstream_neg);
         //--------
         // vtx
         rec_dimuon_px_pos_vtx.push_back(trk_pos->get_mom_vtx().Px());
@@ -310,7 +343,34 @@ int DimuAnaRUS::End(PHCompositeNode* startNode)
 {
   m_file->cd();
   m_file->Write();
-  m_file->Close();  
+  m_file->Close();
+
+  // ── Per-run summary ───────────────────────────────────────────────────────
+  int total_events  = 0;
+  int total_dimuons = 0;
+  std::cout << "\n"
+            << std::setw(10) << "Run"
+            << std::setw(16) << "Trig events"
+            << std::setw(16) << "Dimuons saved"
+            << "\n"
+            << std::string(42, '-') << "\n";
+  for (const auto& kv : m_run_n_events) {
+      int run     = kv.first;
+      int n_evt   = kv.second;
+      int n_dimu  = (m_run_n_dimuons.count(run) ? m_run_n_dimuons.at(run) : 0);
+      total_events  += n_evt;
+      total_dimuons += n_dimu;
+      std::cout << std::setw(10) << run
+                << std::setw(16) << n_evt
+                << std::setw(16) << n_dimu
+                << "\n";
+  }
+  std::cout << std::string(42, '-') << "\n"
+            << std::setw(10) << "Total"
+            << std::setw(16) << total_events
+            << std::setw(16) << total_dimuons
+            << "\n\n";
+
   return Fun4AllReturnCodes::EVENT_OK;
 }
 
@@ -322,7 +382,8 @@ void DimuAnaRUS::ResetRecoDimuBranches() {
     rec_dimuon_px_neg.clear(); rec_dimuon_py_neg.clear(); rec_dimuon_pz_neg.clear();
     rec_dimuon_px_pos_tgt.clear(); rec_dimuon_py_pos_tgt.clear(); rec_dimuon_pz_pos_tgt.clear();
     rec_dimuon_px_neg_tgt.clear(); rec_dimuon_py_neg_tgt.clear(); rec_dimuon_pz_neg_tgt.clear();
-    rec_dimuon_x_pos_st1.clear();  rec_dimuon_y_pos_st1.clear(); rec_dimuon_z_pos_st1.clear();
+    rec_dimuon_chisq_target_pos.clear();   rec_dimuon_chisq_dump_pos.clear();   rec_dimuon_chisq_upstream_pos.clear();
+    rec_dimuon_chisq_target_neg.clear();   rec_dimuon_chisq_dump_neg.clear();   rec_dimuon_chisq_upstream_neg.clear();
     rec_dimuon_roads.clear();
     rec_dimuon_x_pos_vtx.clear();
     rec_dimuon_y_pos_vtx.clear();

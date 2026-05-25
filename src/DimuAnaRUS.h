@@ -1,5 +1,6 @@
 #ifndef _DIMU_ANA_RUS_H_
 #define _DIMU_ANA_RUS_H_
+#include <map>
 #include <fun4all/SubsysReco.h>
 #include <UtilAna/TrigRoadset.h>
 
@@ -40,6 +41,10 @@ private:
 	int runID;
 	int spillID;
 
+	// Per-run counters (run → count)
+	std::map<int,int> m_run_n_events;   // MATRIX1-triggered events seen
+	std::map<int,int> m_run_n_dimuons;  // dimuons that passed all cuts
+
 	// Dimuon-level vectors
 	std::vector<int>
 	    rec_dimuon_id, rec_dimuon_true_id,
@@ -54,6 +59,9 @@ private:
 	    // target-hypothesis momenta
 	    rec_dimuon_px_pos_tgt, rec_dimuon_py_pos_tgt, rec_dimuon_pz_pos_tgt,
 	    rec_dimuon_px_neg_tgt, rec_dimuon_py_neg_tgt, rec_dimuon_pz_neg_tgt,
+	    // chi2 vertex-hypothesis values (pos & neg tracks)
+	    rec_dimuon_chisq_target_pos,  rec_dimuon_chisq_dump_pos,  rec_dimuon_chisq_upstream_pos,
+	    rec_dimuon_chisq_target_neg,  rec_dimuon_chisq_dump_neg,  rec_dimuon_chisq_upstream_neg,
 	    // mu+ track: vertex pos/mom
 	    rec_dimuon_x_pos_vtx, rec_dimuon_y_pos_vtx, rec_dimuon_z_pos_vtx,
 	    rec_dimuon_px_pos_vtx, rec_dimuon_py_pos_vtx, rec_dimuon_pz_pos_vtx,
