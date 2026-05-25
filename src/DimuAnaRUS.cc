@@ -195,7 +195,6 @@ int DimuAnaRUS::process_event(PHCompositeNode* startNode)
         if (!trk_pos || !trk_neg) continue;
 
         // --- Cut: z vertex > -690 cm (dimuon vertex + both track vertices) ---
-        if (sdim->get_pos().Z()           < -690.) continue;
         if (trk_pos->get_pos_vtx().Z()    < -690.) continue;
         if (trk_neg->get_pos_vtx().Z()    < -690.) continue;
 
