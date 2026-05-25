@@ -95,21 +95,35 @@ Spin assignment is encoded by which file a dimuon lands in.
 | Cut | Value |
 |---|---|
 | Trigger | MATRIX1 (FPGA1) only |
-| Dimuon vertex z | > −690 cm |
 | Track vertex z (μ⁺ and μ⁻) | > −690 cm |
-| \|y\| at station 1 (μ⁺ and μ⁻) | > 3 cm |
-| χ² target hypothesis | > 0 for both tracks |
-| χ² dump − χ² target | > 0 for both tracks (target is best vertex) |
-| χ² upstream − χ² target | > 0 for both tracks |
-| Dimuon mass (target hypothesis) | > 0 |
+| χ² target hypothesis | ≥ 0 for both tracks |
+| χ² dump − χ² target | ≥ 0 for both tracks (target is best vertex) |
+| χ² upstream − χ² target | ≥ 0 for both tracks |
 
 The road flag (`rec_dimuon_roads`) is stored but **not** used as a cut.
 
 ---
 
-## Output tree branches
+## Counting dimuons after downstream cuts
 
-The output ROOT file contains a tree named `tree` with one entry per event. Each event may contain zero or more dimuons (stored as vectors). Only events that pass the MATRIX1 trigger are written; only dimuons that pass all cuts above are stored.
+`count_cuts.py` applies the full DocDB #11359 cut set on the output files and prints progressive counts:
+
+```bash
+source setup.sh
+python3 count_cuts.py
+```
+
+Downstream cuts (applied in `count_cuts.py`):
+1. z\_track > −600 cm
+2. |y\_st1| > 3 cm
+3. py\_st1\_pos × py\_st1\_neg < 0
+4. x\_st1 < 25 cm (both tracks)
+5. χ² cuts (re-verified from saved branches)
+6. 0 ≤ M(μμ) ≤ 6 GeV
+
+---
+
+## Output tree branches
 
 ### Event-level
 | Branch | Type | Description |
@@ -142,3 +156,6 @@ The output ROOT file contains a tree named `tree` with one entry per event. Each
 | `rec_dimuon_px/py/pz_pos_st3` | `vector<double>` | μ⁺ momentum at station 3 (GeV/c) |
 | `rec_dimuon_x/y/z_neg_st3` | `vector<double>` | μ⁻ position at station 3 (cm) |
 | `rec_dimuon_px/py/pz_neg_st3` | `vector<double>` | μ⁻ momentum at station 3 (GeV/c) |
+| `rec_dimuon_chisq_target_pos/neg` | `vector<double>` | χ² of target vertex fit (μ⁺/μ⁻) |
+| `rec_dimuon_chisq_dump_pos/neg` | `vector<double>` | χ² of dump vertex fit (μ⁺/μ⁻) |
+| `rec_dimuon_chisq_upstream_pos/neg` | `vector<double>` | χ² of upstream vertex fit (μ⁺/μ⁻) |
