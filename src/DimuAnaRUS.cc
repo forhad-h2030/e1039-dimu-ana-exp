@@ -58,11 +58,11 @@ int DimuAnaRUS::InitRun(PHCompositeNode* startNode)
 	m_evt  = findNode::getClass<SQEvent  >(startNode, "SQEvent");
 	m_srec = findNode::getClass<SRecEvent>(startNode, "SRecEvent");
 
-	if (!m_evt || !m_srec) return Fun4AllReturnCodes::ABORTEVENT;
-
+	if (!m_evt ) { std::cerr << "ERROR: SQEvent node not found\n";   return Fun4AllReturnCodes::ABORTEVENT; }
+	if (!m_srec) { std::cerr << "ERROR: SRecEvent node not found\n"; return Fun4AllReturnCodes::ABORTEVENT; }
 
 	SQRun* sq_run = findNode::getClass<SQRun>(startNode, "SQRun");
-	if (!sq_run) return Fun4AllReturnCodes::ABORTEVENT;
+	if (!sq_run) { std::cerr << "ERROR: SQRun node not found\n"; return Fun4AllReturnCodes::ABORTEVENT; }
 	int LBtop = sq_run->get_v1495_id(2);
 	int LBbot = sq_run->get_v1495_id(3);
 	int ret = m_rs.LoadConfig(LBtop, LBbot);
