@@ -139,6 +139,8 @@ Downstream cuts (applied in `count_cuts.py`):
 | `rec_dimuon_true_id` | `vector<int>` | Reconstructed dimuon ID |
 | `rec_dimuon_track_id_pos/neg` | `vector<int>` | Index of μ⁺/μ⁻ in the track vector |
 | `rec_dimuon_roads` | `vector<int>` | 1 if top-bottom road combination satisfied, 0 otherwise |
+| `rec_dimuon_road_id_pos` | `vector<int>` | Trigger road ID of μ⁺ track |
+| `rec_dimuon_road_id_neg` | `vector<int>` | Trigger road ID of μ⁻ track |
 | `rec_dimuon_x/y/z` | `vector<double>` | Dimuon vertex position (cm) |
 | `rec_dimuon_px/py/pz_pos` | `vector<double>` | μ⁺ momentum at dimuon vertex (GeV/c) |
 | `rec_dimuon_px/py/pz_neg` | `vector<double>` | μ⁻ momentum at dimuon vertex (GeV/c) |

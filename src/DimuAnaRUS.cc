@@ -85,7 +85,9 @@ int DimuAnaRUS::InitRun(PHCompositeNode* startNode)
 	m_tree->Branch("rec_dimuon_true_id", &rec_dimuon_true_id);
 	m_tree->Branch("rec_dimuon_track_id_pos", &rec_dimuon_track_id_pos);
 	m_tree->Branch("rec_dimuon_track_id_neg", &rec_dimuon_track_id_neg);
-	m_tree->Branch("rec_dimuon_roads", &rec_dimuon_roads);
+	m_tree->Branch("rec_dimuon_roads",       &rec_dimuon_roads);
+	m_tree->Branch("rec_dimuon_road_id_pos", &rec_dimuon_road_id_pos);
+	m_tree->Branch("rec_dimuon_road_id_neg", &rec_dimuon_road_id_neg);
 
 
 	m_tree->Branch("rec_dimuon_x", &rec_dimuon_x);
@@ -252,6 +254,8 @@ int DimuAnaRUS::process_event(PHCompositeNode* startNode)
         bool bot_top = pos_bot && neg_top;
         if (top_bot || bot_top) rec_dimuon_roads.push_back(1);
         else                    rec_dimuon_roads.push_back(0);
+        rec_dimuon_road_id_pos.push_back(road_pos);
+        rec_dimuon_road_id_neg.push_back(road_neg);
 
         rec_dimuon_id.push_back(sdim->get_dimuon_id());
         rec_dimuon_true_id.push_back(sdim->get_rec_dimuon_id());
@@ -385,6 +389,8 @@ void DimuAnaRUS::ResetRecoDimuBranches() {
     rec_dimuon_chisq_target_pos.clear();   rec_dimuon_chisq_dump_pos.clear();   rec_dimuon_chisq_upstream_pos.clear();
     rec_dimuon_chisq_target_neg.clear();   rec_dimuon_chisq_dump_neg.clear();   rec_dimuon_chisq_upstream_neg.clear();
     rec_dimuon_roads.clear();
+    rec_dimuon_road_id_pos.clear();
+    rec_dimuon_road_id_neg.clear();
     rec_dimuon_x_pos_vtx.clear();
     rec_dimuon_y_pos_vtx.clear();
     rec_dimuon_z_pos_vtx.clear();

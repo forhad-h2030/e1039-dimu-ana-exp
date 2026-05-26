@@ -49,7 +49,8 @@ private:
 	std::vector<int>
 	    rec_dimuon_id, rec_dimuon_true_id,
 	    rec_dimuon_track_id_pos, rec_dimuon_track_id_neg,
-	    rec_dimuon_roads;
+	    rec_dimuon_roads,
+	    rec_dimuon_road_id_pos, rec_dimuon_road_id_neg;
 
 	std::vector<double>
 	    rec_dimuon_x, rec_dimuon_y, rec_dimuon_z,
